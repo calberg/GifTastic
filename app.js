@@ -14,13 +14,16 @@ $(document).ready(function() {
     };
     addButtons();
     
-    
+    var person = $(this).attr("data-person");
+    var queryURL = "https://api.giphy.com/v1/gifs/search?api_key=" + "4XyCoMGKlq7bL43b0nveIoBTkFC3roO1" + "&q=" + person + "&limit=25&offset=0&rating=G&lang=en";
+
     //grab button clicked and search giphy for that character **NOT WORKING!!!!!!!
     $("#buttons").on("click", function() {
-        var person = $(this).attr("data-person");
-        var queryURL = "https://api.giphy.com/v1/gifs/search?q=" +
-          person + "&api_key=4XyCoMGKlq7bL43b0nveIoBTkFC3roO1";
-    
+        $("#buttons").click(function(event) {
+            event.preventDefault()
+            
+          });
+
         $.ajax({
           url: queryURL,
           method: "GET"
