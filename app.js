@@ -1,75 +1,168 @@
-$(document).ready(function() {
+const characters = [{
+    name: "Rick Sanchez",
+    gifResponse: {},
+    },
+    {
+    name: "Morty",
+    gifResponse: {},
+    },
+    {
+    name: "Summer",
+    gifResponse: {},
+    },
+    {
+    name: "Beth",
+    gifResponse: {},
+    },
+    {
+    name: "Pickle Rick",
+    gifResponse: {},
+    },
+    {
+    name: "Bird Man",
+    gifResponse: {},
+    },{
+    name: "Mr Meeseeks",
+    gifResponse: {},
+    }]
 
-    var topics = ["Rick and Morty", "The Simpsons", "Adventure Time", "Archer", "Looney Tunes", "Futurama", "South Park", "Avatar: The Last Airbender", "Dragon Ball Z", "Pokemon"];
+var characterIndexArray = [];
+
+loadPage();
     //create buttons dynamically
-    function addButtons(){
-    for (var i=0; i<topics.length; i++) {
-        var button = $("<button>");
-        button.addClass("buttons");
-        button.attr("data-show", topics[i]);
-        button.attr("data-person", topics[i]);
-        button.text(topics[i]);
-        $("#gifRow").append(button);
-      };
-    };
-    addButtons();
+    function loadPage(){
+  
+      //create tabs by looping through characters array
+      var i;
+      for (i = 0; i < characters.length; i++) { 
+        $('.nav-tabs').append(" <li class='nav-item nav-character' onclick='showGiphy(" + i +")'>  <a class='nav-link' href='#'>" + characters[i].name + "</a> </li>" );
+        generateQueryURL(i);
+        
+      }
+      $('.nav-tabs').append('<li class="nav-item nav-addd"> <a class="nav-link nav-add" href="#"> +  </a>');
+      $('.nav-tabs').append('<form class="form-inline" style="display: none"> <input class="form-control mr-sm-2 form-control-sm" type="search" placeholder="Search" id="search" aria-label="Search"> <button class="btn btn-sm btn-outline-secondary my-2 my-sm-0" id="search-button" type="submit">Search</button> </form></li>');
+      
+    }
+    function generateQueryURL(characterIndex){
+      console.log(characterIndex);
+      var queryURL = "https://api.giphy.com/v1/gifs/search?api_key=" + "4XyCoMGKlq7bL43b0nveIoBTkFC3roO1" + "&q=" + characters[characterIndex].name + "&limit=25&offset=0&rating=G&lang=en";
+      //save to array
+      characters[characterIndex].queryURL = queryURL
+    }
     
-    var person = $(this).attr("data-person");
-    var queryURL = "https://api.giphy.com/v1/gifs/search?api_key=" + "4XyCoMGKlq7bL43b0nveIoBTkFC3roO1" + "&q=" + person + "&limit=25&offset=0&rating=G&lang=en";
+    $( ".nav-tabs" ).click(function(event) {
+      event.preventDefault()
+      
+    });
+    
+    //on click of add show search
+    $( ".nav-add" ).click(function() {
+      $( ".form-inline" ).toggle();
+    });
+    
+    $("#search-button").click(function() {
+      //save what customer searched 
+      var input = $("#search").val();
+      //add customer search to array
+      characters.push({'name': input, giphyResponse: {}} );
+      
+      //update characterIndex 
+      characterIndex = characters.length -1;
+      console.log(characterIndex);
+      
+      generateQueryURL(characterIndex);
+      
+      $( ".nav-addd" ).before( "<li class='nav-item nav-character' onclick='showGiphy(" + characterIndex +")'>  <a class='nav-link' href='#'>" + characters[characterIndex].name + "</a> </li>" );
+      
+      
+      showGiphy(characterIndex);
+     
+    });
+    
+    var currentIndex = null
 
-    //grab button clicked and search giphy for that character **NOT WORKING!!!!!!!
-    $("#buttons").on("click", function() {
-        $("#buttons").click(function(event) {
-            event.preventDefault()
-            
-          });
 
+
+    function showGiphy(characterIndex){
+      currentIndex = characterIndex;
+      console.log(characterIndex);
+      console.log(characters[characterIndex].queryURL)
+      //only make ajax call if giphyResponse doesn't already exist
+      if (!characters[characterIndex].giphyResponse.data) {
+        //clear any existing gifs
+        $('.card-columns').html("");
         $.ajax({
-          url: queryURL,
+          //use saved queryurl for character
+          url: characters[characterIndex].queryURL,
           method: "GET"
-        })
-          .then(function(response) {
-            var results = response.data;
-            console.log(results);
+        }).then(function(response) {
+          //save response 
+          characters[characterIndex].giphyResponse = response
+          for (j = 0; j < 10; j++) {
+            $('.card-columns').append('<div class="card"> <img src="' + characters[characterIndex].giphyResponse.data[j].images.fixed_width_still.url + '" class="gif card-img-top" data-state="still" data-img-id="'+j+'" data-character="'+characterIndex+'"></div>');
+          }
+          bindGifs();
+        });
+      }
+      else { 
+        $('.card-columns').html("");
+        for (j = 0; j < 10; j++) {
+          if (characters[characterIndex].giphyResponse.data[j].images) {
+            $('.card-columns').append('<div class="card"> <img src="' + characters[characterIndex].giphyResponse.data[j].images.fixed_width_still.url + '" class="gif card-img-top" data-state="still" data-img-id="'+j+'" data-character="'+characterIndex+'"></div>');
+          }
+        }
+        bindGifs();
+      }
+      showLoadMore();
     
-            for (var i = 0; i < results.length; i++) {
-              var gifDiv = $("<div>");
+    }
     
-              var rating = results[i].rating;
+    var loadMore = document.getElementById('load-more')
     
-              var p = $("<p>").text("Rating: " + rating);
+    function showLoadMore() {
+      console.log('show load more handler');
+      loadMore.style.visibility='visible';
     
-              //var gif = $("<img>");
-              //gif.attr("src", results[i].images.fixed_height.url);
+    }
+    function generateQueryURLMore(){
+      var queryURL = "https://api.giphy.com/v1/gifs/search?api_key=" + "RFJGAvH4YDbVtysNfscTPM6Vj0PJeDF1" + "&q=" + characters[characterIndex].name + "&limit=25&offset=9&rating=G&lang=en";
+      //save to array
+      characters[characterIndex].queryURL = queryURL
+      console.log(queryURL);
     
-              var image = $("<img>");
-              image.attr("src", results[i].images.fixed_height_small_still.url);
+    }
     
-              gifDiv.prepend(p);
-              //gifDiv.prepend(gif);
-              gifDiv.prepend(image);
-    
-              $("#gifs-appear-here").prepend(gifDiv);
-            }
-          });
+    //how do i keep track of characterindex?
+      $( "#load-more" ).click(function() {
+        //load next ten from array
+        if (characters[currentIndex].giphyResponse.data[9]){
+          for (j = 9; j < 20; j++) {
+          $('.card-columns').append('<div class="card"> <img src="' + characters[currentIndex].giphyResponse.data[j].images.fixed_width_still.url + '" class="gif card-img-top" data-state="still" data-img-id="'+j+'" data-character="'+currentIndex+'"></div>');
+          }
+          bindGifs();
+        }
       });
     
     
-    //class code for animate and static gifs
-    //$(".gif").on("click", function() {
-        // The attr jQuery method allows us to get or set the value of any attribute on our HTML element
-    //    var state = $(this).attr("data-state");
-        // If the clicked image's state is still, update its src attribute to what its data-animate value is.
-        // Then, set the image's data-state to animate
-        // Else set src to the data-still value
-    //    if (state === "still") {
-    //      $(this).attr("src", $(this).attr("data-animate"));
-    //      $(this).attr("data-state", "animate");
-    //    } else {
-    //      $(this).attr("src", $(this).attr("data-still"));
-    //      $(this).attr("data-state", "still");
-    //    }
-    //  });
+      
     
     
+    //on click of gif play gif
+    function bindGifs(){
+      $('.gif').off();
+      $(".gif").click(function() {
+        var state = $(this).attr("data-state");
+        var characterNumber = $(this).attr("data-character");
+        var imgNumber = $(this).attr("data-img-id");
+        if (state == 'still') {
+          var animatedUrl = characters[characterNumber].giphyResponse.data[imgNumber].images.fixed_width.url;
+          $(this).attr("src", animatedUrl);
+          $(this).attr("data-state", "animate");
+        }
+        if (state == 'animate') {
+          var stillURL = characters[characterNumber].giphyResponse.data[imgNumber].images.fixed_width_still.url
+          $(this).attr("src", stillURL);
+          state == 'animate'
+        }
       });
+    }
